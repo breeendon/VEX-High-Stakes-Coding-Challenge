@@ -1,8 +1,9 @@
 // left motor group
-pros::MotorGroup left_motor_group({-1, 2, -3}, pros::MotorGears::blue);
+pros::MotorGroup left_motor_group({4, 5, -6}, pros::MotorGears::blue);
 // right motor group
-pros::MotorGroup right_motor_group({4, -5, 6}, pros::MotorGears::green);
+pros::MotorGroup right_motor_group({1, 2, -3}, pros::MotorGears::green);
 
+pros::Motor roller(7);
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
                               &right_motor_group, // right motor group
@@ -12,8 +13,8 @@ lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
                               2 // horizontal drift is 2 (for now)
 );
 
-// imu
-pros::Imu imu(10);
+// imu on port 8 cause im cool
+pros::Imu imu(8);
 // horizontal tracking wheel encoder
 pros::Rotation horizontal_encoder(20);
 // vertical tracking wheel encoder
@@ -77,4 +78,45 @@ void initialize() {
             pros::delay(20);
         }
     });
+}
+
+void autonomous()
+{
+  chassis.setPose(0, 0, 0); // i demand a retest
+  chassis.moveToPoint(20, 0, 2500) // go forward and pick up an imaginary ring
+  roller.moveVoltage(12000); // pick up ring or something
+  chassis.moveToPoint(40, 0, 2500)// go forward to pole
+  roller.moveVoltage(-12000); // DROP RING OR SOMETHING
+  chassis.turnToHeading(360, 4000); // sick 360
+  pros.delay(10000); // wait 10 seconds for suspense
+
+  for (int i = 0; i < 100; i++) // twerk on the haters
+  {
+    chassis.turnToHeading(10, 100);
+    chassis.turnToHeading(-10, 100);
+  }
+
+
+}
+
+pros::Controller controller(pros::E_CONTROLLER_MASTER);
+// Double Stick Arcade
+void opcontrol() {
+    // loop forever
+    while (true) {
+        // get left y and right x positions
+        int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
+        // move the robot
+        chassis.arcade(leftY, rightX);
+
+        if (CONTROLLER_GET_DIGITAL_L1)
+          roller.moveVoltage(12000);
+        if (CONTROLLER_GET_DIGITAL_L2)
+          roller.moveVoltage(-12000);
+
+        // delay to save resources
+        pros::delay(25);
+    }
 }
