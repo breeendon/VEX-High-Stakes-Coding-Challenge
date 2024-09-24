@@ -1,7 +1,10 @@
 // left motor group
-pros::MotorGroup left_motor_group({-1, 2, -3}, pros::MotorGears::blue);
+pros::MotorGroup left_motor_group({-1, -2, 3}, pros::MotorGears::blue);
 // right motor group
-pros::MotorGroup right_motor_group({4, -5, 6}, pros::MotorGears::green);
+pros::MotorGroup right_motor_group({4, 5, -6}, pros::MotorGears::green);
+// roller motor
+pros::MotorGroup roller_motors(7);
+
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
@@ -13,7 +16,7 @@ lemlib::Drivetrain drivetrain(&left_motor_group, // left motor group
 );
 
 // imu
-pros::Imu imu(10);
+pros::Imu imu(8);
 // horizontal tracking wheel encoder
 pros::Rotation horizontal_encoder(20);
 // vertical tracking wheel encoder
@@ -61,6 +64,48 @@ lemlib::Chassis chassis(drivetrain, // drivetrain settings
                         angular_controller, // angular PID settings
                         sensors // odometry sensors
 );
+
+pros::Controller controller(pros::E_CONTROLLER_MASTER);
+
+void opcontrol() {
+    // loop forever
+    while (true) {
+        // get left y and right x positions
+        int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
+        // move the robot
+        chassis.arcade(leftY, rightX);
+
+        // delay to save resources
+        pros::delay(25);
+        
+        // Roller control
+       while (true)
+      {
+if (CONTROLLER_GET_DIGITAL_L1)
+{
+roller.moveVoltage(12);
+}
+}
+    }
+}
+
+void autonomous() {
+chassis.moveToPoint(40,40,4000);
+chassis.turnToHeading(0, 4000, {.maxSpeed = 120}, true); 
+      //moved to the part where the ring is and faced the ring
+roller.moveVoltage(-12); //make sure roller arm is all the way up
+pros.delay(4000);
+roller.moveVoltage(0);
+pros.delay(10);
+roller.moveVoltage(12);
+pros.delay(10000);
+chassis.turnToHeading(90, 4000, {.maxSpeed = 120}, true); //turn towards the goal
+chassis.moveToPoint(80,40,4000); //move to goal
+roller.moveVoltage(-12); //assumed that it drops the ring as there isnn another motor
+pros.delay(5000); //end
+}
 
 // initialize function. Runs on program startup
 void initialize() {
